@@ -1,5 +1,4 @@
 ﻿using System.IO;
-using OdooManager.AppModels.Enums;
 
 namespace OdooManager.AppModels
 {
@@ -8,8 +7,8 @@ namespace OdooManager.AppModels
         public FileInfo OdooLogFile { get; set; }
         public FileInfo OdooConfigFile { get; set; }
         public FileInfo OdooExeFile { get; set; }
-        public bool DebugEnabled { get; set; }
-        public string NameService { get; set; }
-        public StatusService StatusService { get; set; }
+        public string OdooNameService { get; set; }
+        public string PostgresNameService { get; set; }
+        public string NginxNameService { get; set; }
     }
 }

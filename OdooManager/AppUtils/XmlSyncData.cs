@@ -5,7 +5,6 @@ using System.Linq;
 using System.Threading;
 using System.Xml.Linq;
 using OdooManager.AppModels;
-using OdooManager.AppModels.Enums;
 
 namespace OdooManager.AppUtils
 {
@@ -29,23 +28,14 @@ namespace OdooManager.AppUtils
                 return;
             }
 
-            ConfigModel data = doc.Root.Descendants().Select(s =>
+            ConfigModel data = doc.Root.Descendants().Select(s => new ConfigModel
             {
-                StatusService dataStatus;
-                Enum.TryParse(s.Attribute("STATUSSERVICE").Value, true, out dataStatus);
-
-                bool debugEnabled;
-                bool.TryParse(s.Attribute("DEBUGENABLED").Value, out debugEnabled);
-
-                return new ConfigModel
-                {
-                    DebugEnabled = debugEnabled,
-                    NameService = s.Attribute("NAMESERVICE").Value,
-                    OdooConfigFile = new FileInfo(s.Attribute("ODOOCONFIGFILE").Value),
-                    OdooExeFile = new FileInfo(s.Attribute("ODOOEXEFILE").Value),
-                    OdooLogFile = new FileInfo(s.Attribute("ODOOLOGFILE").Value),
-                    StatusService = dataStatus
-                };
+                NginxNameService = s.Attribute("NGINXNAMESERVICE").Value,
+                OdooConfigFile = new FileInfo(s.Attribute("ODOOCONFIGFILE").Value),
+                OdooExeFile = new FileInfo(s.Attribute("ODOOEXEFILE").Value),
+                OdooLogFile = new FileInfo(s.Attribute("ODOOLOGFILE").Value),
+                OdooNameService = s.Attribute("ODOONAMESERVICE").Value,
+                PostgresNameService = s.Attribute("POSTGRESNAMESERVICE").Value
             }).FirstOrDefault();
 
             if (data == null)
@@ -63,13 +53,13 @@ namespace OdooManager.AppUtils
             try
             {
                 XElement dataXML = new XElement("Data", 
-                    new XElement("Config", 
-                        new XAttribute("DEBUGENABLED", o.DebugEnabled),
-                        new XAttribute("NAMESERVICE", o.NameService ?? ""),
+                    new XElement("Config",
+                        new XAttribute("NGINXNAMESERVICE", o.NginxNameService),
                         new XAttribute("ODOOCONFIGFILE", o.OdooConfigFile.FullName),
                         new XAttribute("ODOOEXEFILE", o.OdooExeFile.FullName),
                         new XAttribute("ODOOLOGFILE", o.OdooLogFile.FullName),
-                        new XAttribute("STATUSSERVICE", o.StatusService)
+                        new XAttribute("ODOONAMESERVICE", o.OdooNameService),
+                        new XAttribute("POSTGRESNAMESERVICE", o.PostgresNameService)
                 ));
 
                 // Borramos y guardamos
