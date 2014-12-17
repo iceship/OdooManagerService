@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Diagnostics;
-using System.Threading.Tasks;
+using System.IO;
+using System.Runtime.InteropServices;
+using System.Threading;
 using System.Windows.Forms;
 using OdooManager.AppUtils;
 
@@ -8,65 +10,38 @@ namespace OdooManager
 {
     public partial class MainForm : Form
     {
-        private static Lazy<string> testString = new Lazy<string>(() => string.Empty);
+        const int WM_SYSCOMMAND = 0x112;
+        const int SC_MINIMIZE = 0xF020;
+        const int SC_MAXIMIZE = 0xF030;
+
+        [DllImport("user32.dll", CharSet = CharSet.Auto)]
+        static extern IntPtr SendMessage(IntPtr hWnd, UInt32 Msg, int wParam, int lParam);
+
+        [DllImport("user32.dll", SetLastError = true)]
+        static extern IntPtr SetParent(IntPtr hWndChild, IntPtr hWndNewParent);
 
         public MainForm()
         {
             InitializeComponent();
-
-            schedulerConsoleCMD.Tick += schedulerConsoleCMD_Tick;
         }
 
-        private void schedulerConsoleCMD_Tick(object sender, EventArgs e)
+        private void StartOdooClick(object sender, EventArgs e)
         {
-            if (!GlobalsManager.Consola.Started) return;
+            // TODO: Eliminar hardcode
+            GlobalsManager.ConfigOdoo.OdooExeFile = new FileInfo(@"D:\Desarrollo\Odoo\Server\server\openerp-server.exe");
+            GlobalsManager.ConfigOdoo.OdooConfigFile = new FileInfo(@"D:\Desarrollo\Odoo\Server\server\openerp-server.conf");
 
-            consoleInteractive.Text += testString.Value;
-            testString = new Lazy<string>(() => string.Empty);
+            GlobalsManager.Manager.StartOdoo();
+
+            Thread.Sleep(500);
+            IntPtr value = SetParent(GlobalsManager.Consola.CProccess.MainWindowHandle, panel1.Handle);
+            SendMessage(GlobalsManager.Consola.CProccess.MainWindowHandle, WM_SYSCOMMAND, SC_MAXIMIZE, 0);
         }
 
-        private void button1_Click(object sender, EventArgs e)
+        private void StopOdooClick(object sender, EventArgs e)
         {
-            if (!GlobalsManager.Consola.Started) return;
-
-            schedulerConsoleCMD.Start();
-
-            var processStartInfo = new ProcessStartInfo
-            {
-                UseShellExecute = false,
-                ErrorDialog = false,
-                RedirectStandardError = true,
-                RedirectStandardInput = true,
-                RedirectStandardOutput = true,
-                CreateNoWindow = true,
-                FileName = @"D:\Desarrollo\Odoo\Server\server\openerp-server.exe",
-                Arguments = string.Format("--debug --config=\"{0}\"", @"D:\Desarrollo\Odoo\Server\server\openerp-server.conf")
-            };
-
-            GlobalsManager.Consola.CProccess = new Process { StartInfo = processStartInfo };
-
-            Task.Factory.StartNew(() =>
-            {
-                Task.Factory.StartNew(() =>
-                {
-                    Timer t1 = new Timer{Interval = 100};
-                    t1.Tick += (o, args) =>
-                    {
-                        while (GlobalsManager.Consola.COutput.Peek() >= 0)
-                        {
-                            testString = new Lazy<string>(() => testString.Value + GlobalsManager.Consola.COutput.ReadToEnd());
-                        }
-                    };
-                });
-
-                GlobalsManager.Consola.Started = GlobalsManager.Consola.CProccess.Start();
-                GlobalsManager.Consola.CProccess.WaitForExit();
-            })
-            .ContinueWith(c =>
-            {
-                GlobalsManager.Consola.Started = false;
-                schedulerConsoleCMD.Stop();
-            });
+            GlobalsManager.Manager.StopOdoo();
         }
+
     }
 }
