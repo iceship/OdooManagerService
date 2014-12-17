@@ -52,8 +52,11 @@ namespace OdooManager.AppUtils
                 //RedirectStandardInput = true,
                 //RedirectStandardOutput = true,
                 //CreateNoWindow = true,
-                FileName = GlobalsManager.ConfigOdoo.OdooExeFile.FullName,
-                Arguments = string.Format("--debug --config=\"{0}\"", GlobalsManager.ConfigOdoo.OdooConfigFile.FullName),
+                //FileName = GlobalsManager.ConfigOdoo.OdooExeFile.FullName,
+                FileName = "cmd.exe",
+                Arguments = string.Format("/k \"color 02 & {0} --debug --config=\"{1}\"\"",
+                    GlobalsManager.ConfigOdoo.OdooExeFile.FullName,
+                    GlobalsManager.ConfigOdoo.OdooConfigFile.FullName),
                 WindowStyle = ProcessWindowStyle.Minimized,
             };
 
