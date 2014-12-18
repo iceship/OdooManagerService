@@ -54,7 +54,6 @@
     <Compile Include="AppConfig\DirConfig.cs" />
     <Compile Include="AppModels\Attrs\EnumDescriptionAttribute.cs" />
     <Compile Include="AppModels\ConfigModel.cs" />
-    <Compile Include="AppModels\ConsoleModel.cs" />
     <Compile Include="AppModels\Enums\StatusService.cs" />
     <Compile Include="AppModels\Log.cs" />
     <Compile Include="AppUtils\EnumHelper.cs" />

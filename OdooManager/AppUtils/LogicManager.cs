@@ -44,31 +44,31 @@ namespace OdooManager.AppUtils
 
         public void StartOdoo()
         {
-            GlobalsManager.Consola.StartInfo = new ProcessStartInfo
+            var startInfo = new ProcessStartInfo
             {
-                //UseShellExecute = false,
-                //ErrorDialog = false,
-                //RedirectStandardError = true,
-                //RedirectStandardInput = true,
-                //RedirectStandardOutput = true,
-                //CreateNoWindow = true,
-                //FileName = GlobalsManager.ConfigOdoo.OdooExeFile.FullName,
-                FileName = "cmd.exe",
-                Arguments = string.Format("/k \"color 02 & {0} --debug --config=\"{1}\"\"",
-                    GlobalsManager.ConfigOdoo.OdooExeFile.FullName,
+                UseShellExecute = true,
+                ErrorDialog = true,
+                RedirectStandardError = false,
+                RedirectStandardInput = false,
+                RedirectStandardOutput = false,
+                CreateNoWindow = false,
+                FileName = GlobalsManager.ConfigOdoo.OdooExeFile.FullName,
+                Arguments = string.Format("{0} --config=\"{1}\"", 
+                    GlobalsManager.DebugEnabled ? "--debug" : "", 
                     GlobalsManager.ConfigOdoo.OdooConfigFile.FullName),
-                WindowStyle = ProcessWindowStyle.Minimized,
+                WindowStyle = ProcessWindowStyle.Normal,
             };
 
-            GlobalsManager.Consola.CProccess = new Process
+            GlobalsManager.ProcessRunning = new Process
             {
-                StartInfo = GlobalsManager.Consola.StartInfo,
+                StartInfo = startInfo,
                 EnableRaisingEvents = true,
             };
 
             try
             {
-                GlobalsManager.Consola.Started = GlobalsManager.Consola.CProccess.Start();
+                GlobalsManager.ProcessRunning.Start();
+                
             }
             catch (Exception ex)
             {
@@ -78,10 +78,9 @@ namespace OdooManager.AppUtils
 
         public void StopOdoo()
         {
-            if (!GlobalsManager.Consola.Started) return;
+            if (GlobalsManager.ProcessRunning.HasExited) return;
 
-            GlobalsManager.Consola.CProccess.Kill();
-            GlobalsManager.Consola.Started = false;
+            GlobalsManager.ProcessRunning.Kill();
         }
 
         #endregion

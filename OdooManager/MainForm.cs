@@ -1,8 +1,5 @@
 ﻿using System;
-using System.Diagnostics;
 using System.IO;
-using System.Runtime.InteropServices;
-using System.Threading;
 using System.Windows.Forms;
 using OdooManager.AppUtils;
 
@@ -10,32 +7,56 @@ namespace OdooManager
 {
     public partial class MainForm : Form
     {
-        const int WM_SYSCOMMAND = 0x112;
-        const int SC_MINIMIZE = 0xF020;
-        const int SC_MAXIMIZE = 0xF030;
 
-        [DllImport("user32.dll", CharSet = CharSet.Auto)]
-        static extern IntPtr SendMessage(IntPtr hWnd, UInt32 Msg, int wParam, int lParam);
-
-        [DllImport("user32.dll", SetLastError = true)]
-        static extern IntPtr SetParent(IntPtr hWndChild, IntPtr hWndNewParent);
+        private long previousSize;
 
         public MainForm()
         {
             InitializeComponent();
+            Closing += (sender, args) =>
+            {
+                if (!GlobalsManager.ProcessRunning.HasExited)
+                {
+                    GlobalsManager.Manager.StopOdoo();
+                }
+            };
+            
+        }
+
+        private void watcher_Changed(object sender, FileSystemEventArgs e)
+        {
+            using (StreamReader reader = new StreamReader(new FileStream(GlobalsManager.ConfigOdoo.OdooLogFile.FullName,
+                     FileMode.Open, FileAccess.Read, FileShare.ReadWrite)))
+            {
+                //start at the end of the file
+                previousSize = reader.BaseStream.Length;
+
+                //seek to the last max offset
+                reader.BaseStream.Seek(previousSize, SeekOrigin.Begin);
+
+                //read out of the file until the EOF
+                string line;
+                while ((line = reader.ReadLine()) != null)
+                {
+                    consoleLog.AppendText(@"\r\n" + line);
+                }
+
+                //update the last max offset
+                previousSize = reader.BaseStream.Position;
+            }
         }
 
         private void StartOdooClick(object sender, EventArgs e)
         {
-            // TODO: Eliminar hardcode
-            GlobalsManager.ConfigOdoo.OdooExeFile = new FileInfo(@"D:\Desarrollo\Odoo\Server\server\openerp-server.exe");
-            GlobalsManager.ConfigOdoo.OdooConfigFile = new FileInfo(@"D:\Desarrollo\Odoo\Server\server\openerp-server.conf");
-
             GlobalsManager.Manager.StartOdoo();
 
-            Thread.Sleep(500);
-            IntPtr value = SetParent(GlobalsManager.Consola.CProccess.MainWindowHandle, panel1.Handle);
-            SendMessage(GlobalsManager.Consola.CProccess.MainWindowHandle, WM_SYSCOMMAND, SC_MAXIMIZE, 0);
+            logWatcher.Changed += new FileSystemEventHandler(watcher_Changed);
+            logWatcher.Path = GlobalsManager.ConfigOdoo.OdooLogFile.DirectoryName;
+            logWatcher.Filter = GlobalsManager.ConfigOdoo.OdooLogFile.Name;
+
+            GlobalsManager.ProcessRunning.Exited += ProcessRunning_Exited;
+            button1.Enabled = false;
+            button2.Enabled = true;
         }
 
         private void StopOdooClick(object sender, EventArgs e)
@@ -43,5 +64,15 @@ namespace OdooManager
             GlobalsManager.Manager.StopOdoo();
         }
 
+        void ProcessRunning_Exited(object sender, EventArgs e)
+        {
+            // TODO: Mostrar que el proceso esta finalizado
+
+            Invoke(new Action(() =>
+            {
+                button1.Enabled = true;
+                button2.Enabled = false;
+            }));
+        }
     }
 }

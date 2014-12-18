@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.IO;
 using System.Windows.Forms;
 using OdooManager.AppModels;
@@ -42,8 +43,8 @@ namespace OdooManager.AppUtils
         private static Lazy<bool> debugEnabled =
             new Lazy<bool>(() => false);
 
-        private static Lazy<ConsoleModel> consoleModel =
-            new Lazy<ConsoleModel>(() => new ConsoleModel());
+        private static Lazy<Process> processRunning =
+            new Lazy<Process>(() => new Process());
         #endregion
 
         #endregion
@@ -87,10 +88,10 @@ namespace OdooManager.AppUtils
             set { debugEnabled = new Lazy<bool>(() => value); }
         }
 
-        public static ConsoleModel Consola
+        public static Process ProcessRunning
         {
-            get { return consoleModel.Value; }
-            set { consoleModel = new Lazy<ConsoleModel>(() => value);}
+            get { return processRunning.Value; }
+            set { processRunning = new Lazy<Process>(() => value); }
         }
         #endregion
 
